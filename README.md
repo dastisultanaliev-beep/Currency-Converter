@@ -1,7 +1,73 @@
-import customtkinter as ctk
-import sqlite3
-from datetime import datetime
+# Currency Converter
 
+A simple desktop currency converter built with **Python**, **CustomTkinter**, and **SQLite**.
+
+The application allows users to convert between several currencies, swap currencies, and save their conversion history.
+
+## Features
+
+* Convert between multiple currencies
+* Supports RUB, USD, EUR, CNY, and KZT
+* Swap the source and target currencies
+* Accepts both `.` and `,` as decimal separators
+* Displays the conversion result
+* Saves conversion history in SQLite
+* Shows the last 15 conversions
+* Allows users to clear the conversion history
+* Dark mode interface
+
+## Technologies
+
+* Python
+* CustomTkinter
+* SQLite
+* datetime
+
+## Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/your-username/currency-converter.git
+```
+
+Go to the project folder:
+
+```bash
+cd currency-converter
+```
+
+Install the required library:
+
+```bash
+pip install customtkinter
+```
+
+Run the application:
+
+```bash
+python main.py
+```
+
+## Project Structure
+
+```text
+currency-converter/
+│
+├── main.py
+├── cur.db
+└── README.md
+```
+
+The `cur.db` database is created automatically when the application starts.
+
+## How It Works
+
+The program stores exchange rates in the `RATES` dictionary.
+
+For example:
+
+```python
 RATES = {
     "RUB": 1,
     "USD": 90,
@@ -9,160 +75,18 @@ RATES = {
     "CNY": 12.5,
     "KZT": 0.18,
 }
+```
 
-conn = sqlite3.connect('cur.db')
-cursor = conn.cursor()
+The application first converts the entered amount to Russian rubles and then converts the ruble value into the selected currency.
 
-cursor.execute("""
-    CREATE TABLE IF NOT EXISTS history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        text TEXT,
-        date TEXT
-    )
-""")
-conn.commit()
+Conversion history is stored in an SQLite database.
 
+## Important Note
 
-def convert():
-    text = amount_entry.get()
-    text = text.replace(",", ".")
+The exchange rates in this project are **fixed example rates** and are not automatically updated from the internet.
 
-    try:
-        amount = float(text)
-    except ValueError:
-        result_label.configure(text="Enter a number")
-        return
+For a real-world application, an exchange-rate API could be connected to provide current rates.
 
-    money_from = from_menu.get()
-    money_to = to_menu.get()
+## Author
 
-    rubles = amount * RATES[money_from]
-    result = rubles / RATES[money_to]
-
-    line = f"{amount} {money_from} = {round(result, 2)} {money_to}"
-    result_label.configure(text=line)
-
-    date = datetime.now().strftime("%d.%m %H:%M")
-
-    cursor.execute(
-        "INSERT INTO history (text, date) VALUES (?, ?)",
-        (line, date)
-    )
-    conn.commit()
-
-    show_history()
-
-
-def swap():
-    a = from_menu.get()
-    b = to_menu.get()
-
-    from_menu.set(b)
-    to_menu.set(a)
-
-
-def show_history():
-    cursor.execute(
-        "SELECT date, text FROM history ORDER BY id DESC LIMIT 15"
-    )
-    rows = cursor.fetchall()
-
-    history_box.delete("1.0", "end")
-
-    for date, text in rows:
-        history_box.insert("end", f"{date} {text}\n")
-
-
-def clear_history():
-    cursor.execute("DELETE FROM history")
-    conn.commit()
-    show_history()
-
-
-ctk.set_appearance_mode("dark")
-
-window = ctk.CTk()
-window.title("Currency Converter")
-window.geometry("420x520")
-
-ctk.CTkLabel(
-    window,
-    text="Currency Converter",
-    font=("Arial", 22, "bold")
-).pack(pady=20)
-
-amount_entry = ctk.CTkEntry(
-    window,
-    placeholder_text="Amount",
-    font=("Arial", 18),
-    height=45,
-    justify="center"
-)
-amount_entry.pack(padx=40, fill="x")
-
-row = ctk.CTkFrame(window, fg_color="transparent")
-row.pack(pady=15)
-
-from_menu = ctk.CTkOptionMenu(
-    row,
-    values=list(RATES),
-    width=100
-)
-from_menu.set("USD")
-from_menu.pack(side="left", padx=5)
-
-to_menu = ctk.CTkOptionMenu(
-    row,
-    values=list(RATES),
-    width=100
-)
-to_menu.set("RUB")
-to_menu.pack(side="left", padx=5)
-
-ctk.CTkButton(
-    window,
-    text="Convert",
-    height=40,
-    command=convert
-).pack(padx=40, fill="x")
-
-result_label = ctk.CTkLabel(
-    window,
-    text="Result: ?",
-    font=("Arial", 18)
-)
-result_label.pack()
-
-history_box = ctk.CTkTextbox(
-    window,
-    height=200
-)
-history_box.pack(
-    pady=10,
-    padx=20,
-    fill="both",
-    expand=True
-)
-
-clear_button = ctk.CTkButton(
-    window,
-    text="Clear History",
-    command=clear_history
-)
-clear_button.pack(
-    padx=20,
-    pady=10,
-    fill="x"
-)
-
-ctk.CTkButton(
-    row,
-    text="⇄",
-    width=40,
-    command=swap
-).pack(side="left", padx=5)
-
-show_history()
-
-window.mainloop()
-conn.close()
+Created as a Python learning project.
